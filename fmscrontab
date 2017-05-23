@@ -1,0 +1,34 @@
+# Timed tasks for FixMyStreet.
+
+# This is an example crontab that you may want to use as a basis for
+# one on your own server.  You should replace /var/www/fixmystreet/fixmystreet with the path to the
+# clone of the FixMyStreet repository that you are using.  You should
+# also replace /var/www/fixmystreet with a writeable directory for the lock files.
+
+# Copyright (c) 2007 UK Citizens Online Democracy. All rights reserved.
+# Email: matthew@mysociety.org. WWW: http://www.mysociety.org/
+
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# send-reports has three rows so that its 8am entry can be run with --verbose to send a morning summary of anything that's gone wrong
+5,10,15,20,25,30,35,40,45,50,55 * * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/fixmystreet/send-reports.lock" "/var/www/fixmystreet/fixmystreet/bin/send-reports" || echo "stalled?"
+0 0-7,9-23 * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/send-reports.lock" "/var/www/fixmystreet/fixmystreet/bin/send-reports" || echo "stalled?"
+0 8 * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/send-reports.lock" "/var/www/fixmystreet/fixmystreet/bin/send-reports --verbose" || echo "stalled?"
+
+2 * * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/send-alerts.lock" "/var/www/fixmystreet/fixmystreet/bin/send-alerts" || echo "stalled?"
+22,52 * * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/send-questionnaires.lock" "/var/www/fixmystreet/fixmystreet/bin/send-questionnaires" || echo "stalled?"
+
+# If you utilise Open311 and the updates extension, you will need to run these scripts
+#*/5 * * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/send-comments.lock" "/var/www/fixmystreet/fixmystreet/bin/send-comments" || echo "stalled?"
+#*/5 * * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/fetch-comments.lock" "/var/www/fixmystreet/fixmystreet/bin/fetch-comments" || echo "stalled?"
+
+47 0-7,9-23 * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/open311-populate-service-list.lock" "/var/www/fixmystreet/fixmystreet/bin/open311-populate-service-list" || echo "stalled?"
+47 8 * * * "/var/www/fixmystreet/fixmystreet/commonlib/bin/run-with-lockfile.sh" -n "/var/www/fixmystreet/open311-populate-service-list.lock" "/var/www/fixmystreet/fixmystreet/bin/open311-populate-service-list --warn" || echo "stalled?"
+
+# Once an hour, update the all reports stats
+13 * * * * "/var/www/fixmystreet/fixmystreet/bin/update-all-reports"
+
+# Once a day on all servers
+39 2 * * * "/var/www/fixmystreet/fixmystreet/bin/problems-filed-graph"
+43 2 * * * "/var/www/fixmystreet/fixmystreet/bin/problem-creation-graph"
+00 8 * * * "/var/www/fixmystreet/fixmystreet/bin/check-for-zombies" fms
